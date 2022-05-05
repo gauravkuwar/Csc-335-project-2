@@ -43,7 +43,7 @@
   (eq? (second-term prop) 'v))
 
 (define (not-prop? prop)
-  (eq? (second-term prop) '-))
+  (eq? (first-term prop) '-))
 
 (define (implies-prop? prop)
   (eq? (second-term prop) '=>))
