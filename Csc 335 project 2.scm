@@ -10,7 +10,7 @@
 ; Demorgan's law: A or B = (not ((not A) and (not B)))
 ; implicite rule: A => B = ((not A) or B)
 
-; we can change implicit rule using demorgans rule so we can turn any prop of and, or, not, implies into a prop of just and and not.
+; we can change implicit rule using demorgans rule so we can turn any prop of and, or, not, implies into a prop of just and, not.
 
 
 ; example:
@@ -21,6 +21,20 @@
 ;
 ; Contructors:
 ; we want to be able to create a prop given some operands.
+(define (make-and op1 op2)
+  (list op1 '^ op2))
+
+(define (make-or op1 op2)
+  (list op1 'v op2))
+
+(define (make-not op1)
+  (list '- op1))
+
+(define (make-implies op1 op2)
+  (list op1 '=> op2))
+
+; professor said we make need to create a make-true, make-false
+
 
 ; Selectors:
 ; we want to be able to select each term of the prop
@@ -48,7 +62,18 @@
 (define (implies-prop? prop)
   (eq? (second-term prop) '=>))
 
+; DRAFT:
+; how to implement demorgans law? we check if it is an or proposition with or-prop?, if it is then we can apply demorgans
+; to transform it. possible approach:
+(define (transform-or prop)
+  (make-not (make-and (make-not (first-term prop)) (make-not (second-term prop))))
+  )
 
+; how to implement implicit rule? we check if it is an implies proposition with implies-prop? if it is then we
+; apply implicite rule to transform it. we first will change it to an or prop, then call transform-or. possible approach:
+(define (transform-implies prop)
+  (transform-or (make-or (make-not (first-term prop)) (second-term prop)))
+  )
 
 ;; Part 2
 
