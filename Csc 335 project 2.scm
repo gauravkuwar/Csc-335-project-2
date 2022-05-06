@@ -66,14 +66,30 @@
 ; how to implement demorgans law? we check if it is an or proposition with or-prop?, if it is then we can apply demorgans
 ; to transform it. possible approach:
 (define (transform-or prop)
-  (make-not (make-and (make-not (first-term prop)) (make-not (second-term prop))))
+  (make-not (make-and (make-not (first-term prop)) (make-not (third-term prop))))
   )
+
+; test
+;input: (transform-or (list '4 'v '5))
+;output: (- ((- 4) ^ (- 5)))
 
 ; how to implement implicit rule? we check if it is an implies proposition with implies-prop? if it is then we
 ; apply implicite rule to transform it. we first will change it to an or prop, then call transform-or. possible approach:
 (define (transform-implies prop)
-  (transform-or (make-or (make-not (first-term prop)) (second-term prop)))
+  (transform-or (make-or (make-not (first-term prop)) (third-term prop)))
   )
+
+; test
+; input: (transform-implies (list '1 '=> '2))
+; output: (- ((- (- 1)) ^ (- 2)))
+
+; test 2, without transform-or (just check if implicit rule transforms correctly)
+;
+; (define (transform-implies-test prop)
+;  (make-or (make-not (first-term prop)) (third-term prop)))
+;
+; input: (transform-implies-test (list '1 '=> '2))
+; output: ((- 1) v 2)
 
 ;; Part 2
 
