@@ -8,7 +8,7 @@
 ;;
 ; we know with logical equivalence that:
 ; Demorgan's law: A or B = (not ((not A) and (not B)))
-; implicite rule: A => B = ((not A) or B)
+; implicite rule: A => B = ((not A) or B) = (not (A and (not B))
 
 ; we can change implicit rule using demorgans rule so we can turn any prop of and, or, not, implies into a prop of just and, not.
 
@@ -21,8 +21,21 @@
 ;
 ; Contructors:
 ; we want to be able to create a prop given some operands.
+
+; what about p ^ q ^ r ^ ...
+
 (define (make-and op1 op2)
   (list op1 '^ op2))
+
+; recusive make-and
+
+(define (make-and-rec lst-ops)
+  (cond ((null? (cdr lst-ops)) lst-ops)
+        (else (append (list (car lst-ops) '^) (make-and-rec (cdr lst-ops))))))
+;
+;(make-and-rec '(p q r s t))
+;(define x (make-and-rec '(p (t ^ u) r s)))
+;x
 
 (define (make-or op1 op2)
   (list op1 'v op2))
@@ -68,6 +81,9 @@
 (define (transform-or prop)
   (make-not (make-and (make-not (first-term prop)) (make-not (third-term prop))))
   )
+;
+;(define (transform-or prop-lst)
+;  (make-not (make-and 
 
 ; test
 ;input: (transform-or (list '4 'v '5))
@@ -90,6 +106,45 @@
 ;
 ; input: (transform-implies-test (list '1 '=> '2))
 ; output: ((- 1) v 2)
+
+; may be we can just check the term?
+(define (or? term)
+  (eq? term 'v))
+
+; splits the prop by v (kinda like split in python)
+
+(define (split-by-or prop)
+  (define (helper prop result block)
+    (cond ((null? prop) result)
+          (else (let ((t (car prop)))
+                  (cond ((list? t) (helper (cdr prop)))
+                        ((or? t) (helper (cdr prop) (append result '()) block))
+                        (block (helper (cdr prop) (append result (list (list t))) block)))))))
+  (helper prop '() #t))
+              
+
+;(define (split-by-or prop)
+;  (define (helper prop result)
+;        (cond ((null? prop) result)
+;        (else (let ((t (car prop))) ; t=term / current element
+;                (cond ((list? t) ))
+;                      ((or? t) (split-by-or (cdr prop))) ; just skip or
+;                      ; not a or term
+;                      (else (cons t (split-by-or (cdr prop)))))))))
+; tests:
+;(split-by-or '((p ^ (q v t)) v r))
+(split-by-or '())
+(split-by-or '(p))
+(split-by-or '((p ^ q) ^ s v r))
+
+
+(define (make-prop prop)
+  (let ((t1 (car prop)))
+  (cond ((list? t1) (make-prop t1)) ; for nested props inside (...)
+        ((not-prop? prop) (cond ((= (cadr prop) '-) 1); double neglation/cancel   ; assume that if we see - operand there must be a term after it
+                                (else 1)))))); else next term must be a prop
+
+
 
 ;; Part 2
 
