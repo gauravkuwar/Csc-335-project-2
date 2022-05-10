@@ -22,16 +22,15 @@
 ; Contructors:
 ; we want to be able to create a prop given some operands.
 
-; what about p ^ q ^ r ^ ...
 
 (define (make-and op1 op2)
   (list op1 '^ op2))
 
-; recusive make-and
-
-(define (make-and-rec lst-ops)
-  (cond ((null? (cdr lst-ops)) lst-ops)
-        (else (append (list (car lst-ops) '^) (make-and-rec (cdr lst-ops))))))
+;; recusive make-and
+;
+;(define (make-and-rec lst-ops)
+;  (cond ((null? (cdr lst-ops)) lst-ops)
+;        (else (append (list (car lst-ops) '^) (make-and-rec (cdr lst-ops))))))
 ;
 ;(make-and-rec '(p q r s t))
 ;(define x (make-and-rec '(p (t ^ u) r s)))
@@ -107,21 +106,180 @@
 ; input: (transform-implies-test (list '1 '=> '2))
 ; output: ((- 1) v 2)
 
+; POSSIBLE props
+
+; (p) ? valid?
+
+; (p ^ q)
+; (p => q)
+; (p v q)
+
+; negation
+; (- p) ?? 
+; (- p ^ - q)
+; (- p ^ q)
+; (p ^ - q)
+
+; ___________________________________________________
+
+; may be lets assume no double negation (- - p)
+
+; test props:
+(define p1 '(- p ^ - (- q v r)))
+(define p1 '(- p ^ - (- q v r)))
+
+; checks if prop is atomic
+(define (atom? prop)
+  (not (list? prop)))
+
+
+; Put negation into parentheses
+
+; v1
+(define (sep-not-1 prop)
+  (cond ((null? prop) '())
+        ((list? prop) (let ((term (car prop)))
+                        (cond ((list? term) (cons (sep-not term) (sep-not (cdr prop))))
+                              ((eq? term '-) (cons (list '- (sep-not (cadr prop))) (sep-not (cddr prop)))) ; assumes negation should always be followed by a prop
+                              (else (cons term (sep-not (cdr prop)))))))
+        (else prop)))
+
+; v2
+; with this function negation will always have 2 terms the (- symbol and the operand) and be in a separate list
+; but it doesnt work for double negation of the form (- - p), i assume this is not valid prop
+
+(define (sep-not prop)
+  (cond ((or (atom? prop) (null? prop)) prop)
+        (else (let ((term (car prop)))
+                (cond ((eq? term '-) (cons (list '- (sep-not (cadr prop))) (sep-not (cddr prop)))) ; assumes negation should always be followed by a prop
+                      (else (cons (sep-not term) (sep-not (cdr prop)))))))))
+
+; tests:
+;(sep-not p1)
+
+(define (or-prop? prop)
+  (eq? (second-term prop) 'v))
+
+; (p v q) = (- ((- p) ^ (- q))
+(define (make-and op1 op2)
+  (list op1 '^ op2))
+
+(define (make-not op1)
+  (list '- op1))
+
+
+; changed this one for my funcs 
+(define (not-prop? prop)
+  (and (not (atom? prop)) (eq? (first-term prop) '-)))
+
+; may be could use
+(define (transform-or-func t1 t2)
+  (make-not (make-and (make-not t1) (make-not t2))))
+
+
+(define (transform-or prop)
+  (cond ((or (atom? prop) (null? prop)) prop)
+        ((not-prop? prop) (make-not (transform-or (second-term prop))))
+        (else (let ((t1 (transform-or (first-term prop)))
+                    (t2 (second-term prop))
+                    (t3 (transform-or (third-term prop))))
+                 (cond ((or-prop? prop) (make-not (make-and (make-not t1) (make-not t3))))
+                       (else (list t1 t2 t3)))))))
+
+
+(define p1 '(- p ^ - (- q v r)))
+(define p2 '(r ^ (q v r)))
+
+(sep-not p1)
+(transform-or (sep-not p1))
+
+(display "-----\n")
+
+(sep-not p2)
+(transform-or (sep-not p2))
+
+; filters double nots (- (- p))
+
+(define (double-negation-filter prop)
+  (cond ((or (atom? prop) (null? prop)) prop)
+        ((and (not-prop? prop) (not-prop? (second-term prop))) (double-negation-filter (second-term (second-term prop)))) ; for double negation
+        ((not-prop? prop) (make-not (transform-or (second-term prop)))) ; this is just for simple not ( 1 not)
+        (else (let ((t1 (double-negation-filter (first-term prop))) ; they share some kind of pattern !
+                    (t2 (second-term prop))
+                    (t3 (double-negation-filter (third-term prop))))
+                (list t1 t2 t3)))))
+
+; tests
+(display "\nfilter\n")
+(display "-----\n")
+
+(double-negation-filter '(- p)) ; -> (- p)
+(double-negation-filter '(- (- p))) ; -> p
+(double-negation-filter '(- (- (- (- (- p)))))) ; -> (- p)
+(double-negation-filter (transform-or (sep-not p1))) 
+
+; ((- p) ^ (- (- ((- (- q)) ^ (- r)))))
+
+; transform-or and double-negation-filter have a VERY similar pattern!
+
+
+; transform-implies is identical to transform-or
+(define (transform-implies prop)
+  (cond ((or (atom? prop) (null? prop)) prop)
+        ((not-prop? prop) (make-not (transform-implies (second-term prop))))
+        (else (let ((t1 (transform-implies (first-term prop))) ; this line is different, only changed func name 
+                    (t2 (second-term prop))
+                    (t3 (transform-implies (third-term prop)))) ; this line is different, only changed func name 
+                 (cond ((implies-prop? prop) (make-or (make-not t1) t3)) ; this line is different
+                       (else (list t1 t2 t3)))))))
+
+; tests
+(display "\ntransform-implies\n")
+(display "-----\n")
+
+(define p1 '(- p => (- q v r)))
+(define p2 '(r => (q v r)))
+(define p3 '(p => q))
+
+(transform-implies (sep-not p1))
+(transform-implies (sep-not p2))
+(transform-implies (sep-not p3))
+
+
+; tests on complete transformation 
+
+(display "\nFull transform\n")
+(display "-----\n")
+
+(define p1 '(- p => (- q v r)))
+(define p2 '(r => (q v r)))
+(define p3 '(p => q))
+
+
+(double-negation-filter (transform-or (transform-implies (sep-not p1))))
+(double-negation-filter (transform-or (transform-implies (sep-not p2))))
+(double-negation-filter (transform-or (transform-implies (sep-not p3))))
+
+; OLD WORK BELOW
+
 ; may be we can just check the term?
-(define (or? term)
-  (eq? term 'v))
-
-; splits the prop by v (kinda like split in python)
-
-(define (split-by-or prop)
-  (define (helper prop result block)
-    (cond ((null? prop) result)
-          (else (let ((t (car prop)))
-                  (cond ((list? t) (helper (cdr prop)))
-                        ((or? t) (helper (cdr prop) (append result '()) block))
-                        (block (helper (cdr prop) (append result (list (list t))) block)))))))
-  (helper prop '() #t))
-              
+;(define (or? term)
+;  (eq? term 'v))
+;
+;; splits the prop by v (kinda like split in python)
+;
+;(define (split-by-or prop)
+;  (define (helper prop result block)
+;    (cond ((null? prop) result)
+;          (else (let ((t (car prop)))
+;                  (cond ((list? t) (helper (cdr prop) (append result (split-by-or t)) block))
+;                        ((or? t) (helper (cdr prop) (append result '()) block))
+;                        (block (helper (cdr prop) (append result (list (list t))) #f))
+;                        ((not block) (helper (cdr prop) (append result '()) #t))
+;
+;                        )))))
+;  (helper prop '() #t))
+;              
 
 ;(define (split-by-or prop)
 ;  (define (helper prop result)
@@ -133,16 +291,16 @@
 ;                      (else (cons t (split-by-or (cdr prop)))))))))
 ; tests:
 ;(split-by-or '((p ^ (q v t)) v r))
-(split-by-or '())
-(split-by-or '(p))
-(split-by-or '((p ^ q) ^ s v r))
+;(split-by-or '())
+;(split-by-or '(p))
+;(split-by-or '((p ^ q) ^ s v r))
 
 
-(define (make-prop prop)
-  (let ((t1 (car prop)))
-  (cond ((list? t1) (make-prop t1)) ; for nested props inside (...)
-        ((not-prop? prop) (cond ((= (cadr prop) '-) 1); double neglation/cancel   ; assume that if we see - operand there must be a term after it
-                                (else 1)))))); else next term must be a prop
+;(define (make-prop prop)
+;  (let ((t1 (car prop)))
+;  (cond ((list? t1) (make-prop t1)) ; for nested props inside (...)
+;        ((not-prop? prop) (cond ((= (cadr prop) '-) 1); double neglation/cancel   ; assume that if we see - operand there must be a term after it
+;                                (else 1)))))); else next term must be a prop
 
 
 
