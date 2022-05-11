@@ -91,12 +91,24 @@
 ; input: (transform-implies-test (list '1 '=> '2))
 ; output: ((- 1) v 2)
 
+; so now we can transform a single proposition of or, implies to just and, not. now we need to be able to transform nested
+; propositions as needed, that are mixed with propositions we dont need to transform.
+;
 ;; Part 2
 
 ;; Give a complete specification and development (including proof) for an interpreter of infix propositions:
 ;; your interpreter will input a proposition and an a-list of T,F values for variables, and will return the
 ;; computed value of the input proposition using those values for its variables.
 
+; looking up values from the a-list recursively
+
+(define (lookup val a-list)
+  (cond ((eq? val (caar a-list)) (cadr (car a-list)))
+        (else (or #f (lookup val (cdr a-list))))
+        ))
+;test
+(define t1 (list (list 'x #f) (list 'y #t) (list 'z #f)))
+(lookup 'z t1)
 
 ;; Part 3
 
