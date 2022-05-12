@@ -107,9 +107,30 @@
         (else (or #f (lookup val (cdr a-list))))
         ))
 ;test
-(define t1 (list (list 'x #f) (list 'y #t) (list 'z #f)))
-(lookup 'z t1)
+(define t1 (list (list 'x #t) (list 'y #t) (list 'z #f)))
+;(lookup 'z t1) ; f
+;
+;
+(define(operand? prop)
+  (and (not (list? prop)) (not(equal? prop '^)) (not (equal? prop '-)))
+  )
 
+(define (compute prop a-list)
+  (cond ((null? prop) ) ; check atom prop or empty list prop
+        ((operand? prop) (lookup prop a-list))
+        ((not-prop? prop) (eval-not (compute (second-term prop) a-list))) ; for single not
+        (else (let ((p (compute (first-term prop) a-list))
+                    (q (compute (third-term prop) a-list)))
+                (eval-and p q)))))
+
+(define (eval-not prop)
+  (not prop)
+  )
+
+(define (eval-and prop1 prop2)
+  (and prop1 prop2)
+  )
+  
 ;; Part 3
 
 ;; Demonstrate your interpreter by using it in conjunction with the front-end of Part 1.
