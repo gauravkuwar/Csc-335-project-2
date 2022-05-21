@@ -13,15 +13,19 @@
 
 ; ________________________________________________________________________________________________
 ;
-; Note: ****Some notes about terminology or something else***
-; we could also define what a proposition is in the context of this project
+; Note: A proposition in the context of this project is either an atom such as 'p
+;       or a list such as '(p v q), '(- p), '(p ^ q) and '(p => q). 'p and 'q
+;       are also propositions. (***Maybe you can explain it better idk***)
 
-; prop variable is a proposition
-; Logical symbols:
-; AND = '^ 
-; OR = 'v 
-; NOT = '-
-; IMPLIES = '=> 
+;       Terminology used in the project:
+;            prop: variable is a proposition
+;            DI: Design Idea, GI: Guess Invariant, IH: Inductive Hypothesis, IS: Inductive Step
+
+;       Logical symbols:
+;            AND = '^ 
+;            OR = 'v 
+;            NOT = '-
+;            IMPLIES = '=> 
 
 ; ________________________________________________________________________________________________
 ;
@@ -68,6 +72,16 @@
 (atom? '(1 . 2))
 (atom? '())
 (atom? '(p v q))
+
+; ________________________________________________________________________________________________
+;
+; PART 1 Description:
+
+;; Design a data type suitable for representing infix propositions, as described in my notes for Class 19.
+
+;; Give a complete specification and development (including a proof) for a program which inputs a proposition
+;; which uses and (^), or (v), not (-) and implies (=>) and which returns a logically equivalent proposition
+;; using just ^ and - .  Both the input and output should use infix notation.
 
 ; ________________________________________________________________________________________________
 ;
@@ -180,25 +194,48 @@
 ; transform
 ; ________________________________________________________________________________________________
 
-; pre-cond : a function f, and a list of lists lst
-; post-cond : returns a list with f called on every lst and every sublist in lst.
+; pre-cond : a proposition prop
+; post-cond : returns a proposition using only AND and NOT, where OR prop and IMPLIES prop
+;             are transformed using transform-or and transform-implies repectively.
+;             
 
-; Explain why we need this func and what it does
+; The main purpose of this function is to recursively apply the transform-or and
+; the transform-implies function to prop, when it encounter a OR prop or IMPLIES prop
+; accordingly.
 
-; DI: 
+; DI: If prop is a null or atom we just return the prop, if its a NOT prop
+;     we recurse on the second-term of prop, otherwise we recurse on the first-term
+;     and the third-term of prop. If the prop is a OR proposition, we transform it
+;     with transform-or, if the prop is a IMPLIES proposition, we transform it
+;     with transform-implies, otherwise (only option left is that is a AND prop)
+;     we join the recursed first and third terms of prop using make-and.
 
-; Basis Step:
-; IH:
-; IS:
+; Basis Step: null prop and atom prop returns prop
 
-; Termination Argument
+; IH: We assume that (transform (second-term prop)) for a NOT prop, and
+;     (transform (first-term prop)) and (transform (third-term prop)) for AND, OR, and IMPLIES prop
+;     will output a proposition that meets the post conditions.
+; 
+; IS: Then (transform prop) will return (make-not (transform (second-term prop))) if (not-prop? prop)
+;     and the pre-cond holds since we first checked if the prop is a null or an atom and a NOT prop must
+;     have a second-term which is a proposition.
+;     Let p = (transform (first-term prop)) and q = (transform (third-term prop)) and
+;     the pre-cond holds since everyother proposition must have a first-term which is a proposition and
+;     a second-term which is a proposition, then
+;     if (or-prop? prop) we get (transform-or p q), if (implies-prop? prop) we get (transform-implies p q)
+;     and otherwise/AND prop we get (make-and p q).
+;     So, we know that (transform prop) and all its possible sub-propositions meet the post conditions.
+;     
+
+; Termination Argument:
+; Since, every recursive call we recurse on all possible sub-propositions within prop, so prop
+; will eventually be an atomic prop (such as 'p or 'q) and the recursion will terminate.
 
 
 ; code
 
 (define (transform prop)
   (cond ((or (null? prop) (atom? prop)) prop)
-        ((double-not? prop) (transform (second-term prop)))
         ((not-prop? prop) (make-not (transform (second-term prop))))
         (else (let ((p (transform (first-term prop))) (q (transform (third-term prop))))
                 (cond ((or-prop? prop) (transform-or p q))
@@ -219,7 +256,9 @@
 
 
 ; audit:
-
+; Our code does implement our Design Idea because we check if prop is a null or atom and return the prop
+; Then we check every possible proposition type NOT, OR, IMPLIES, and AND, and process the prop
+; according to our design idea for each type of proposition.
 
 ; ________________________________________________________________________________________________
 ;
@@ -259,8 +298,32 @@
 
 ; ________________________________________________________________________________________________
 ;
-; frontend
+; front-end
 ; ________________________________________________________________________________________________
 
-(define (frontend prop)
+; pre-cond - a valid proposition prop
+; post-cond - returns a proposition with prop transformed using transform function, and with no
+;             double nots, which are cancelled using double-negation function.
+
+(define (front-end prop)
   (double-negation (transform prop)))
+
+; tests:
+"front-end tests"
+(define p1 '((- p) => ((- q) v r)))
+(define p2 '(r => (q v r)))
+(define p3 '(p => q))
+
+(front-end p1)
+(front-end p2)
+(front-end p3)
+
+; ________________________________________________________________________________________________
+;
+; PART 2 Description:
+
+;; Give a complete specification and development (including proof) for an interpreter of infix propositions:
+;; your interpreter will input a proposition and an a-list of T,F values for variables, and will return the
+;; computed value of the input proposition using those values for its variables.
+
+; ________________________________________________________________________________________________
