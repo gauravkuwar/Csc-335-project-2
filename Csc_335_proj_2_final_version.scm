@@ -196,8 +196,8 @@
 ; ________________________________________________________________________________________________
 
 ; pre-cond : a valid proposition prop
-; post-cond : returns a proposition using only AND and NOT, where OR prop and IMPLIES prop
-;             are transformed using transform-or and transform-implies repectively.
+; post-cond : returns a proposition using only AND and NOT for prop and its every sub-prop,
+;             where OR prop and IMPLIES prop are transformed using transform-or and transform-implies repectively.
 ;             
 
 ; The main purpose of this function is to recursively apply the transform-or and
