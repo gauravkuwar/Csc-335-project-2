@@ -134,3 +134,31 @@
 ;; Part 3
 
 ;; Demonstrate your interpreter by using it in conjunction with the front-end of Part 1.
+
+;; computed value of the input proposition using those values for its variables.
+
+; safe input
+; error checking;
+
+; check for valid list / valid propsition
+; check if assosiation list works with the prop
+
+; we should call prop -> P
+
+
+; grading:
+; overall quality of package
+
+
+(define (interpreter P lst)
+  (backend (frontend P) lst))
+
+; or (we could call it frontend)
+
+(define (frontend P lst)
+  ;; Error checking:
+  ; test prop - check maybe len of prop 2=not-prop, check first value is not operator; 3=else, check middle value is a valid operator
+  ; test lst - check variables occur in prop
+  
+  ; then we compute
+  (backend (transform-func P) lst))
