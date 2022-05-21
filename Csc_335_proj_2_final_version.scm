@@ -365,3 +365,12 @@
 ;; computed value of the input proposition using those values for its variables.
 
 ; ________________________________________________________________________________________________
+
+
+; ________________________________________________________________________________________________
+;
+; PART 3 Description:
+
+;; Demonstrate your interpreter by using it in conjunction with the front-end of Part 1.
+
+; ________________________________________________________________________________________________
