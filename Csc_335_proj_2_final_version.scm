@@ -8,55 +8,34 @@
 ;
 ; Introduction
 ;
-; ** EVERY THING we were able to complete
+; We were able to complete all parts of the project, part 1 - the front-end (with double negation),
+; part 2 - backend, part 3 - combining the backend and front-end in a function called eval-prop.
+; For part 3, we also first check if the variables in the prop are in the association list.
 ;
 
 ; ________________________________________________________________________________________________
-;
-; Notes: A valid proposition in the context of this project is either an atomic (atom) such as 'p
-;        or a list such as '(p v q), '(- p), '(p ^ q) and '(p => q). 'p and 'q
-;        are also propositions. A null list '(), is not a valid proposition.
-;        (***Maybe you can explain it better idk***)
 
-;        Terminology used in the project:
-;             prop: variable is a proposition
-;             DI: Design Idea, GI: Guess Invariant, IH: Inductive Hypothesis, IS: Inductive Step
+; Notes:
+
+; Define Datatype:
+; A valid proposition in the context of this project is either atomic (atom) such as 'p
+; or a list such as '(p v q), '(- p), '(p ^ q) and '(p => q). 'p and 'q
+; are also propositions. A proposition build with the constructors is a valid proposition.
+; A null list '(), is not a valid proposition.
  
-;        Logical symbols:
-;             AND = '^ 
-;             OR = 'v 
-;             NOT = '-
-;             IMPLIES = '=> 
+; Logical symbols:
+;     AND = '^ 
+;     OR = 'v 
+;     NOT = '-
+;     IMPLIES = '=>
+
+; Terminology used in the project:
+;     prop: variable is a proposition
+;     DI: Design Idea, GI: Guess Invariant, IH: Inductive Hypothesis, IS: Inductive Step
 
 ; ________________________________________________________________________________________________
 ;
-; Construtors - we want to be able to create a prop given some operands.
-; ________________________________________________________________________________________________
-
-(define (make-and op1 op2)
-  (list op1 '^ op2))
-(define (make-or op1 op2)
-  (list op1 'v op2))
-(define (make-not op1)
-  (list '- op1))
-(define (make-implies op1 op2)
-  (list op1 '=> op2))
-
-; ________________________________________________________________________________________________
-;
-; Selector: (is that what they are called?)
-; ________________________________________________________________________________________________
-
-(define (first-term prop)
-  (car prop))
-(define (second-term prop)
-  (cadr prop))
-(define (third-term prop) ; double check if there is an issure with the not prop for this(since it has 2 terms). (NO ISSUES!)
-  (caddr prop))
-
-; ________________________________________________________________________________________________
-;
-; atom?
+; Helper function: atom?
 ; ________________________________________________________________________________________________
 
 ; pre-cond : a value x
@@ -76,51 +55,200 @@
 
 ; ________________________________________________________________________________________________
 ;
-; PART 1 Description:
+; Construtors - make-and, make-or, make-not, make-implies (Tools for making propositions)
+; ________________________________________________________________________________________________
 
-;; Design a data type suitable for representing infix propositions, as described in my notes for Class 19.
+; we want to be able to create a prop given some operands.
 
-;; Give a complete specification and development (including a proof) for a program which inputs a proposition
-;; which uses and (^), or (v), not (-) and implies (=>) and which returns a logically equivalent proposition
-;; using just ^ and - .  Both the input and output should use infix notation.
+"Construtors tests"
+
+; ________________________________________________________________________________________________
+
+; make-and
+
+; pre-cond : a proposition p and a proposition q
+; post-cond : returns AND representation of p and q: '(p ^ q)
+
+(define (make-and p q)
+  (list p '^ q))
+
+; test:
+(make-and 'p 'q)
+
+; ________________________________________________________________________________________________
+
+; make-or
+
+; pre-cond : a proposition p and a proposition q
+; post-cond : returns OR representation of p and q: '(p v q)
+
+(define (make-or p q)
+  (list p 'v q))
+
+; test:
+(make-or 'p 'q)
+
+; ________________________________________________________________________________________________
+
+; make-not
+
+; pre-cond : a proposition p
+; post-cond : returns NOT representation of p: '(- p)
+
+(define (make-not p)
+  (list '- p))
+
+; test:
+(make-not 'p)
+
+; ________________________________________________________________________________________________
+
+; make-implies
+
+; pre-cond : a proposition p and a proposition q
+; post-cond : returns IMPLIES representation of p and q: '(p => q)
+
+(define (make-implies p q)
+  (list p '=> q))
+
+; test:
+(make-implies 'p 'q)
 
 ; ________________________________________________________________________________________________
 ;
-; not-prop?
+; Selectors - first-term, second-term, third-term
 ; ________________________________________________________________________________________________
 
-; pre-cond : a value x
-; post-cond : checks if x is an atom, so it checks if its not a null value, and that its
-;             not a pair (since a list is a pair, this also checks if x is not a list)
+; we want to be able to select each term of the prop
+
+"Selector tests"
+
+; ________________________________________________________________________________________________
+
+; first-term
+
+; pre-cond : takes a non-atomic prop, which is an IMPLIES, AND, NOT, and OR prop.
+; post-cond : returns the first-term of the prop.
+
+(define (first-term prop)
+  (car prop))
+
+; tests:
+(first-term '(p v q))
+
+; ________________________________________________________________________________________________
+
+; second-term
+
+; pre-cond : takes a non-atomic prop, which is an IMPLIES, AND, NOT, and OR prop.
+; post-cond : returns the second-term of the prop.
+
+(define (second-term prop)
+  (cadr prop))
+
+; tests:
+(second-term '(- (p => q)))
+(second-term '(p ^ q))
+
+; ________________________________________________________________________________________________
+
+; third-term
+
+; pre-cond : takes a non-atomic prop, which is an IMPLIES, AND, and OR prop.
+; post-cond : returns the third-term of the prop.
+
+(define (third-term prop)
+  (caddr prop))
+
+; test:
+(third-term '(p => (p v q))) 
+
+; ________________________________________________________________________________________________
+;
+; Classifiers - not-prop?, or-prop?, and-prop?, implies-prop?
+; ________________________________________________________________________________________________
+
+; we want to be able to classify if a prop is and, or, not, implies
+
+"Classifiers tests"
+
+; ________________________________________________________________________________________________
+
+; not-prop?
+
+; pre-cond : any non-atomic valid proposition prop.
+; post-cond : returns true if the prop is a NOT prop else false
 
 (define (not-prop? prop)
   (eq? (first-term prop) '-))
 
-; tests
+; tests:
+(not-prop? '(- p))
+(not-prop? '(p v q))
 
 ; ________________________________________________________________________________________________
-;
+
 ; or-prop?
-; ________________________________________________________________________________________________
+
+; pre-cond : any non-atomic valid proposition prop.
+; post-cond : returns true if the prop is a OR prop else false
 
 (define (or-prop? prop)
   (eq? (second-term prop) 'v))
 
+; tests:
+(or-prop? '(p v (p ^ q)))
+(or-prop? '(- p))
+
 ; ________________________________________________________________________________________________
-;
+
 ; and-prop?
-; ________________________________________________________________________________________________
+
+; pre-cond : any non-atomic valid proposition prop.
+; post-cond : returns true if the prop is a AND prop else false
 
 (define (and-prop? prop)
   (eq? (second-term prop) '^))
 
+; tests:
+(and-prop? '(p ^ (-q)))
+(and-prop? '(p v q))
+
 ; ________________________________________________________________________________________________
-;
+
 ; implies-prop?
-; ________________________________________________________________________________________________
+
+; pre-cond : any non-atomic valid proposition prop.
+; post-cond : returns true if the prop is a IMPLIES prop else false
 
 (define (implies-prop? prop)
   (eq? (second-term prop) '=>))
+
+; tests:
+(implies-prop? '(p => (-q)))
+(implies-prop? '(p ^ q))
+
+; ________________________________________________________________________________________________
+;
+; double-not?
+; ________________________________________________________________________________________________
+
+; This is a special classifier that checks if a prop is double NOT
+
+; pre-cond : any non-atomic valid proposition prop.
+; post-cond : returns true if the prop is a NOT proposition, and the second-term of
+;             of prop is a non-atomic valid proposition prop that is also a NOT proposition.
+
+(define (double-not? prop)
+    (and (not-prop? prop)
+         (not (atom? (second-term prop)))
+         (not-prop? (second-term prop))))
+
+; tests:
+"double-not? tests"
+(double-not? '(- ( - p))) ; -> #t
+(double-not? '( - p)) ; -> #f
+(double-not? '(p v (- ( - p)))) ; -> #f, because double-not? is not recursive
 
 ; ________________________________________________________________________________________________
 ;
@@ -134,13 +262,13 @@
 
 ; ________________________________________________________________________________________________
 ;
-; double-not?
-; ________________________________________________________________________________________________
+; PART 1 Description:
 
-(define (double-not? prop)
-    (and (not-prop? prop)
-         (not (atom? (second-term prop)))
-         (not-prop? (second-term prop))))
+;; Design a data type suitable for representing infix propositions, as described in my notes for Class 19.
+
+;; Give a complete specification and development (including a proof) for a program which inputs a proposition
+;; which uses and (^), or (v), not (-) and implies (=>) and which returns a logically equivalent proposition
+;; using just ^ and - .  Both the input and output should use infix notation.
 
 ; ________________________________________________________________________________________________
 ;
@@ -348,13 +476,18 @@
 
 ; tests:
 "front-end tests"
+; propositions build with lists, easier to write/read
 (define p1 '((- p) => ((- q) v r)))
-(define p2 '(r => (q v r)))
-(define p3 '(p => q))
+(define p2 '(((- (p v q)) => (p => q)) ^ q))
+
+; we can use a proposition build by constructors as well
+(define p3 (make-implies 'r (make-or 'q 'r)))
+(define p4 (make-implies 'p 'q))
 
 (front-end p1)
 (front-end p2)
 (front-end p3)
+(front-end p4)
 
 ; ________________________________________________________________________________________________
 ;
@@ -410,7 +543,7 @@
  (lookup 'z t1) ;returned #f
  (lookup 'x t1) ; returned #t
 
-;audit:
+; audit:
 ; Our code does implement our design idea because we check is the var is in the first list element of a-list
 ; (caar a-list, since the first value will be the variable). If it is then we
 ; we return the second value of the list element which is the T/F value associated with the variable(cadr (car a-list since the
@@ -427,11 +560,11 @@
 ; DI: if the value isn't a list, '^ or '- then it must be a variable for the proposition.
 
 (define(variable? prop)
-  (and (not (list? prop)) (not(equal? prop '^)) (not (equal? prop '-))) ;may need to also check null?
+  (and (not (list? prop)) (not (equal? prop '^)) (not (equal? prop '-))) ;may need to also check null?
   )
 ;
 ; Test
-"varaible? test"
+"variable? test"
 (variable? '^)
 (variable? '-)
 (variable? (list 1 2 3))
@@ -457,10 +590,10 @@
 ; These uses primitives so there shouldn't be a need for proof 
 ;_______________________________________________________________________________________________________
 ;
-; Interpreter
+; Interpreter / backend
 ;________________________________________________________________________________________________________
 ;
-; precondition: a valid proposition prop(of only and, not), an a-list that contains the truth value assiciated with each varaible
+; precondition: a valid proposition prop(of only and, not), an a-list that contains the truth value associated with each variable
 ;               in prop.
 ; postcondition: returns the computed value of the input proposition using those values for its variables.
 ;
@@ -473,7 +606,7 @@
 ;     inside the not proposition. If it is an and proposition then we evaluate that after interpreting any proposition inside the and
 ;     proposition.
 ;
-; Basis step: If the prop is null then we shouldn't return any value, there is no truth value to evaluate. If the prop is a varaible
+; Basis step: If the prop is null then we shouldn't return any value, there is no truth value to evaluate. If the prop is a variable
 ;             then we want to return the truth value for that varaible which is evaluating the proposition and satisfies the postocndition.
 
 ; IH: We assume that both a-list and prop are valid inputs. a-list is unchanged so on the next recursive call a-list remains a
@@ -523,3 +656,286 @@
 ;; Demonstrate your interpreter by using it in conjunction with the front-end of Part 1.
 
 ; ________________________________________________________________________________________________
+;
+; Helper function: element-of?
+; ________________________________________________________________________________________________
+
+; pre-cond: a val and a list of atoms lst
+; post-cond: returns of val is an element of lst or not
+
+; LST is lst initially
+; GI: val is an element of LST iff val is an element of lst
+
+; DI: Iterates through every element of lst, until lst is null, or element is eq
+;     to val, while maintaining the GI.
+
+; weak-enough?
+; Since, LST=lst initially, then value will be in LST only if its in lst, so our GI holds
+
+; preserved?
+; lst will terminate if (car lst) is val, so for all elements in LST and not in lst we know for sure
+; are not eq to val. So, our GI holds since val is an element of LST iff val is an element of lst.
+
+; strong-enough?
+; At the end of the iteration, will either be a null list of a lst where val is (car lst)
+; So if lst is null, then val is not an element of LST, and if it is not null val is in LST,
+; since val is (car lst) so our GI holds.
+
+; Termination argument:
+; At every iteration the length of lst is decreased by 1 with (cdr lst), so
+; eventually, lst will be a null list (if val is not found in lst beforehand) so
+; the program will always terminate.
+
+; code:
+
+(define (element-of? val lst)
+  (cond ((null? lst) #f)
+        ((eq? val (car lst)) #t)
+        (else (element-of? val (cdr lst)))))
+
+; tests:
+"element-of? tests"
+(element-of? 2 '(1 3 4 2 5))
+(element-of? 2 '(1 3 4 5))
+
+; audit:
+; Our code implements our DI, since we iterate through every element of lst
+; with (car lst) and (cdr lst), we terminate if lst is null, or (car lst) is val,
+; so our GI is maintained.
+
+; ________________________________________________________________________________________________
+;
+; Helper function: remove-dublicates
+; ________________________________________________________________________________________________
+
+; pre-cond : a list of atoms lst
+; post-cond : returns a list with all elements of lst, but no dublicates
+
+; Note: the order of the initial lst is not maintained, but we can reverse the output
+;       to maintain the order, but the order is not relevant to our use case, so
+;       I decided not to implement it here.
+
+; LST is lst initially
+; GI: new-lst is all unique elements in LST for elements in LST but not in lst
+
+; DI: maintain a list new-lst, which is a null list initially, and iterate through lst,
+;     while maintaining the GI.
+
+; weak-enough?
+; Initially, LST=lst so there would be no elements in LST but not in lst, and so new-lst
+; is a null list and the GI holds.
+
+; preserved?
+; At every iteration, an element of lst is only added to new-list if the element is
+; not already an element of new-lst, so new-lst will always have unique elements in LST
+; for elements in LST but not in lst, which is our GI, so our GI holds
+
+; strong-enough?
+; At the end of the iteration, lst will be a null list, so new-lst will be all unique
+; elements in LST which is our post condition and our GI holds.
+
+; Termination Argument:
+; At every iteration the length of lst is decreased by 1 with (cdr lst),
+; so eventually lst will be a null list and the program will terminate.
+
+
+; code:
+(define (remove-dublicates lst)
+  (define (iter lst new-lst)
+    (cond ((null? lst) new-lst)
+          (else (iter (cdr lst) (cond ((element-of? (car lst) new-lst) new-lst)
+                                      (else (cons (car lst) new-lst)))))))
+  (iter lst '()))
+
+; tests:
+"remove-dublicates tests"
+(remove-dublicates '(a b c d a))
+(remove-dublicates '(1 2 3 1 3 5))
+
+; audit:
+; Our code implements the DI, because new-lst is initially, and we iterate through
+; lst with (car lst) and (cdr lst), and only add (car lst) to new-lst if
+; it not already in new-lst, so our GI is maintained.
+
+; ________________________________________________________________________________________________
+;
+; Helper function: elems-in?
+; ________________________________________________________________________________________________
+
+; pre-cond : two list of atoms lst1 and lst2
+; post-cond : checks if all elements in lst1 are in lst2
+
+; Note: this doesn't check if the all elemenets in lst2 are in lst1
+;       so lst2 can have extra elements that are not in lst1.
+
+; DI: For every element for lst1 check if it is in element of lst2 with the
+;     element-of? function, until lst1 is a null list, then return #t.
+
+
+; Basis Step: (elems-in? ()' lst2) = #t since there are no elements in lst1
+;             all elements in lst1 are in lst2 by default.
+
+; IH: assume (elems-in? (cdr lst1) lst2)) returns #t if all elements in (cdr lst1)
+;     are in lst2 and #f otherwise.
+
+; IS: for (elems-in? lst1 lst2) we check is lst1 is a null list, so (cdr lst1)
+;     will not produce an error and the preconditions are met for (elems-in? (cdr lst1) lst2).
+;     Then we do (element-of? (car lst1) lst2) to check if (car lst) is in lst2, if it is
+;     we will get #t,and #f otherwise. Then we perform and on (element-of? (car lst1) lst2)
+;     (elems-in? (cdr lst1) lst2)), so if either are false the output will be #f. So,
+;     our post-conditions are met.
+
+; Termination Argument:
+; Since we do (cdr lst1) for every recursive call, and so decrease the length of lst1
+; by 1 for every recursive call, lst1 will eventually be a null list which is our basis
+; step and our program will terminate.
+
+; checks if every element of lst1 is in lst2
+(define (elems-in? lst1 lst2)
+  (cond ((null? lst1) #t)
+        (else (and (element-of? (car lst1) lst2) (elems-in? (cdr lst1) lst2)))))
+
+; tests:
+"elems-in? tests"
+(elems-in? '(1 2 3) '(1 2 3 4)) ; #t
+(elems-in? '(1 2 3) '(1 2 4)) ; removed 3 so should be #f
+
+; audit:
+; Our code implements the design idea because for every element of lst1 we check if
+; the element is in lst2 with element-of? function, when stop when lst1 is a null list
+; and return #t.
+
+; ________________________________________________________________________________________________
+;
+; vars-in-prop
+; ________________________________________________________________________________________________
+
+; pre-cond : a valid proposition prop
+; post-cond : returns a list of all the variables/(valid atomic propositions) in prop but with no
+;             repeated values / dublicates.
+
+; vars-in-prop-with-dubs proof:
+
+; pre-cond : a valid proposition prop
+; post-cond : returns a list of all the variables/(valid atomic propositions) in prop             
+
+; DI: If prop is an atom we just return the (list prop), 
+;     If it is a NOT prop, we recurse on the second-term of prop,
+;     otherwise we recurse on the first-term and the third-term of prop, and then append both.
+
+; Basis Step: an atomic prop returns (list prop)
+
+; IH: We assume that (vars-in-prop-with-dubs (second-term prop)) for NOT prop, and
+;     (vars-in-prop-with-dubs (first-term prop)) and (vars-in-prop-with-dubs (third-term prop)) for AND, OR, and IMPLIES prop
+;     will output a list of all the variables within the propositions within prop.
+; 
+; IS: Then (vars-in-prop-with-dubs prop) will return (vars-in-prop-with-dubs (second-term prop)) if (not-prop? prop)
+;     and (append (vars-in-prop-with-dubs (first-term prop)) (vars-in-prop-with-dubs (third-term prop))) otherwise.
+;     Since, we first check that prop is not an atom? using the selectors will not return an error,
+;     and the precondition will be met. Then (vars-in-prop-with-dubs (second-term prop)) will return the list of all the variables
+;     in (second-term prop), and (append (vars-in-prop-with-dubs (first-term prop)) (vars-in-prop-with-dubs (third-term prop))) will
+;     return the list of variables in (first-term prop) and (third-term prop) combined with append. So (vars-in-prop-with-dubs prop)
+;     meets the post-conditions.
+;     
+
+; Termination Argument:
+; Since, every recursive call we recurse on all possible sub-propositions within prop, so prop
+; will eventually be an atomic prop (such as 'p or 'q) and the recursion will terminate.
+
+(define (vars-in-prop prop) ; vars-in-prop is only to remove dublicates from the output of vars-in-prop-with-dubs
+  (define (vars-in-prop-with-dubs prop)
+    (cond ((atom? prop) (list prop))
+          ((not-prop? prop) (vars-in-prop-with-dubs (second-term prop)))
+          (else (append (vars-in-prop-with-dubs (first-term prop)) (vars-in-prop-with-dubs (third-term prop))))))
+  
+  (remove-dublicates (vars-in-prop-with-dubs prop)))
+
+; test:
+"vars-in-prop tests"
+(vars-in-prop '(p v q))
+(vars-in-prop '(p v ((r ^ s) => q)))
+
+; audit:
+; Our code does implement our Design Idea because we check if prop is an atom and return the (list prop).
+; Then we check every possible proposition type NOT, OR, IMPLIES, and AND, and process the prop
+; according to our design idea for each type of proposition, resulting in a list of atoms of all
+; the variables in prop.
+
+; ________________________________________________________________________________________________
+;
+; vars-in-alist
+; ________________________________________________________________________________________________
+
+; pre-cond : a list of variables and an a-list that contains the truth value associated with a variable.
+; post-cond : returns if the variables in lst are in a-list
+
+; DI: (map car a-list) will return a list of all the variables in a-list, then we can use
+;     elems-in? function to check if variables in lst are in a-list.
+
+(define (vars-in-alist lst a-list)
+  (elems-in? lst (map car a-list)))
+
+; tests:
+"vars-in-alist tests"
+(define p2 '(((- (p v q)) => (p => r)) ^ s))
+(define alist1 '((p #t) (q #f) (r #t) (s #t))) ; #t
+
+(vars-in-alist (vars-in-prop p2) alist1)
+
+(define p3 '(((- (p v q)) => (p => r)) ^ s))
+(define alist2 '((p #t) (q #f) (r #t))) ; s is removed
+
+(vars-in-alist (vars-in-prop p3) alist2) ; returns #f
+
+; ________________________________________________________________________________________________
+;
+; eval-prop
+; ________________________________________________________________________________________________
+
+; pre-cond : a valid proposition, and an a-list that contains the truth value associated with a variable.
+; post-cond : returns the boolean evaluation of the proposition using variables in the a-list, if each
+;             variable in the prop matchs a variable in the a-list otherwise throws error. 
+
+; DI: This func brings everythign together, does checks prior to evaluating the prop, then
+;     uses front-end to convert the prop to a prop using only NOT and AND, then uses output of the
+;     front-end as the prop for the interpreter function (backend), and with the a-list, outputs the
+;     boolean value of the proposition.
+
+; Tools for making propositions:
+; we can use constructors to make propositions and we can use lists to make a valid proposition.
+; both are acceptable inputs.
+
+; Tools for checking association list:
+; we check association list with vars-in-alist, if it fails we return an error
+
+(define (eval-prop prop a-list)
+  (cond ((not (vars-in-alist (vars-in-prop prop) a-list)) (display "ERROR: a-list variable not in prop\n"))
+        (else (interpreter (front-end prop) a-list))))
+
+; tests:
+"Final eval-prop tests"
+(define p1 '(p v q))
+(define alist1 '((p #t) (q #f)))
+
+(eval-prop p1 alist1) ; -> #t
+
+(define p1 '(p v q))
+(define alist1 '((p #f) (q #f) (r #t))) ; added extra variable, since we can still get output there is no error
+
+(eval-prop p1 alist1) ; -> #f
+
+
+(define p2 '(((- (p v q)) => (p => r)) ^ s))
+(define alist2 '((p #t) (q #f) (r #t) (s #t)))
+
+(eval-prop p2 alist2) ; -> #t
+
+
+(define p3 '(((- (p v q)) => (p => r)) ^ s))
+(define alist3 '((p #t) (q #f) (r #t))) ; removed the s variable
+
+(eval-prop p3 alist3) ; -> error
+
+
+
+
