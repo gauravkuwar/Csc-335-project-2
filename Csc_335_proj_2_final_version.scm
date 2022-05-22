@@ -405,8 +405,10 @@
         ))
 
 ; test:
-; (define t1 (list (list 'x #t) (list 'y #t) (list 'z #f)))
-; (lookup 'z t1) ;returned #f
+"Lookup Test"
+ (define t1 (list (list 'x #t) (list 'y #t) (list 'z #f)))
+ (lookup 'z t1) ;returned #f
+ (lookup 'x t1) ; returned #t
 
 ;audit:
 ; Our code does implement our design idea because we check is the var is in the first list element of a-list
@@ -414,6 +416,106 @@
 ; we return the second value of the list element which is the T/F value associated with the variable(cadr (car a-list since the
 ; second element of the list element is always the value). This is our desired result.
 ; Otherwise we will or #f with the recrusive call of the cdr of a-list.
+
+;________________________________________________________________________________________________
+;
+; variable?
+;________________________________________________________________________________________________
+
+; precondition: a value x
+; postcondition: return #t if the value is not a list, '^, '- and #f otherwise.
+; DI: if the value isn't a list, '^ or '- then it must be a variable for the proposition.
+
+(define(variable? prop)
+  (and (not (list? prop)) (not(equal? prop '^)) (not (equal? prop '-))) ;may need to also check null?
+  )
+;
+; Test
+"varaible? test"
+(variable? '^)
+(variable? '-)
+(variable? (list 1 2 3))
+(variable? 'x)
+;_____________________________________________________________________________________________________
+;
+; And/Not proposition evaluation.
+;_______________________________________________________________________________________________________
+;
+; this will simply evaluate a not proposition
+; precondition: a #t or #f value prop.
+; postcondition: output will be the logical not of prop. 
+(define (eval-not prop)
+  (not prop))
+
+
+; this will simply evaluate an and proposition
+; precondition: a #t or #f value prop2 and a #t or #f value prop2.
+; postcondition: output will be the logical and of prop1 and prop 1
+(define (eval-and prop1 prop2)
+  (and prop1 prop2))
+;
+; These uses primitives so there shouldn't be a need for proof 
+;_______________________________________________________________________________________________________
+;
+; Interpreter
+;________________________________________________________________________________________________________
+;
+; precondition: a valid proposition prop(of only and, not), an a-list that contains the truth value assiciated with each varaible
+;               in prop.
+; postcondition: returns the computed value of the input proposition using those values for its variables.
+;
+; The main purpose of this function is to lookup the associated value of each variable in the proposition and to recursively
+; evaluate the proposition. since the proposition is of finite size we can recurse on the size of the proposition.
+
+; DI: If prop is null then we can just return since there is nothing to evaluate. If prop is just a single variable then we can
+;     look up the associated truth value for that variable using lookup. if it doesn't get caught by the 2 previous conditions then it
+;     is a not, and proposition. We check if it is an or proposition and evaluate it, after recursively interpreting any proposition
+;     inside the not proposition. If it is an and proposition then we evaluate that after interpreting any proposition inside the and
+;     proposition.
+;
+; Basis step: If the prop is null then we shouldn't return any value, there is no truth value to evaluate. If the prop is a varaible
+;             then we want to return the truth value for that varaible which is evaluating the proposition and satisfies the postocndition.
+
+; IH: We assume that both a-list and prop are valid inputs. a-list is unchanged so on the next recursive call a-list remains a
+;     a valid a-list that contains values for all variables in the proposition. After the recursive call prop in going to be either
+;     the first term or third term in an and proposition, which is still a proposition. or it is going to be the second term in a not
+;     proposition which is also still going to be a proposition. Since all 3 of these are in the original proposition then prop
+;     will remain a valid proposition that only contains not, and while also still being a variable in the a-list. The precondition
+;     is held.
+;
+; IS: We need to know that we are correctly evaluating what the recursive call returns. since the returned value will be a truth value,
+;     either T/F based on the lookup function. We take that returned value and apply the eval-not function to it if it is a not
+;     proposition and the eval-and function if it is an and proposition. These functions with evaluate an or and an and proposition
+;     respectively so we know that we are evaluating the returned result correctly.
+;
+; Termination Argument: Since the proposition in finite and every recursive call is done on a term inside the original proposition we
+;                       we will reach a single varible and the recursion will terminate.
+(define (interpreter prop a-list)
+  (cond ((null? prop) ) ; check atom prop or empty list prop
+        ((variable? prop) (lookup prop a-list))
+        ((not-prop? prop) (eval-not (interpreter (second-term prop) a-list))) ; for single not
+        (else (let ((p (interpreter (first-term prop) a-list))
+                    (q (interpreter (third-term prop) a-list)))
+                (eval-and p q)))))
+;
+; Tests:
+ "Interpreter Test"
+ (define alist1 (list (list 'p #t) (list 'q #f)))
+ (define ex1 '(- ((- p) ^ (- q))))
+ (interpreter ex1 alist1)
+; Result : #t
+;
+(define alist1 (list (list 'p #f) (list 'q #f)))
+(interpreter ex1 alist1)
+; Result: #f
+
+; audit:
+; Our code correctly implements our design idea because we check if the prop is null and simply return. We then check if prop is a
+; variable then lookup the associated truth value for that variable. If those two conditions fail then we check if it is a not
+; proposition; if it is then we evaluate not on the recrusive result of the proposition inside the not proposition. Similarly then we
+; know it has to be an and proposition and we evaluate the and proposition on the recursive result of the 2 propositions inside the
+; and proposition.
+
 ; ________________________________________________________________________________________________
 ;
 ; PART 3 Description:
