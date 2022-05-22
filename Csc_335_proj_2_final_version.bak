@@ -365,55 +365,8 @@
 ;; computed value of the input proposition using those values for its variables.
 
 ; ________________________________________________________________________________________________
-; 
-; Lookup
-;________________________________________________________________________________________________
-;
-; We want to be able to look up a T/F value given to a variable in an a-list.
-;
-; precondition: an a-list that is a list of lists that contain variables and the T/F values they are paired to
-;               and a variable that is in the a-list.
-;
-; postcondition: The value that is associated to the variable given as input.
 
-; The main purpose of this function is to look at every list in the a-list recursively and see if the first element in that list is
-; equal to the variable we are looking for. If it is then we will return the second element in the list which is the T/F value
-; associated with the variable.
-;
-; DI: We will be recursing on the size of the list. Since we know that the variable needs to be in the a-list (since  we checked before)
-;     we can check the first pair of variables/ values and recursive
 
-; Basis step: When the variable is equal to the first item in the list we stop recursing and return the cadr of the car of the list
-;             which is the second element in the list. This is the T/F value that we need for the postcondition.
-
-; IH: var is unchanged from the next call so we can still assume that it is still a variable in the a-list. When we make the recursive
-;     call we are taking the cdr of a-list. Since we know that a-list contains var we will never reach the null case so there is no
-;     need to test for that. taking the cdr of a list will have a-list continue to be a list and since we have the condition to stop
-;     recursing if var is found in the a-list we know that on the next call a-list remains a list that contains var in it.
-
-; IS: When we have our recursive call returned we will logical or this result with #f. Since #f logical or'ed with a second truth value
-;     will give the identity of the second value we know that it is computing whatever the value that is associated with var that was
-;     returned.
-
-; Termination arguement: we also know that this function will end because we know that var is in the a-list and since we are decrementing the a-list by 1
-; element each call we will eventually reach the list element that contains var.
-
-; code
-(define (lookup var a-list)
-  (cond ((eq? var (caar a-list)) (cadr (car a-list)))
-        (else (or #f (lookup var (cdr a-list))))
-        ))
-
-; test:
-; (define t1 (list (list 'x #t) (list 'y #t) (list 'z #f)))
-; (lookup 'z t1) ;returned #f
-
-;audit:
-; Our code does implement our design idea because we check is the var is in the first list element of a-list
-; (caar a-list, since the first value will be the variable). If it is then we
-; we return the second value of the list element which is the T/F value associated with the variable(cadr (car a-list since the
-; second element of the list element is always the value). This is our desired result.
-; Otherwise we will or #f with the recrusive call of the cdr of a-list.
 ; ________________________________________________________________________________________________
 ;
 ; PART 3 Description:
